@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>分數王國的食物大冒險 - 分類小遊戲</title>
+  <style>
+    body {
+      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+      background-color: #f0f9ff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      user-select: none;
+    }
+
+    h1 {
+      color: #1e3a8a;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #4b5563;
+      margin-bottom: 20px;
+    }
+
+    /* 計分與控制面板 */
+    .dashboard {
+      display: flex;
+      gap: 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background: white;
+      padding: 12px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .score { color: #059669; }
+    .timer { color: #dc2626; }
+
+    /* 出題區域 */
+    .card-container {
+      width: 100%;
+      max-width: 500px;
+      height: 180px;
+      background: white;
+      border: 3px dashed #3b82f6;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+
+    /* 分數顯示樣式 */
+    .fraction-card {
+      font-size: 2.8rem;
+      font-weight: bold;
+      color: #1d4ed8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .fraction {
+      display: inline-flex;
+      flex-direction: column;
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    .numerator {
+      border-bottom: 3px solid #1d4ed8;
+      padding: 0 8px;
+    }
+
+    .denominator {
+      padding: 0 8px;
+    }
+
+    .whole-number {
+      font-size: 3.2rem;
+      margin-right: 4px;
+    }
+
+    /* 歸類籃子區域 */
+    .buckets-container {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      max-width: 800px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .bucket {
+      flex: 1;
+      min-width: 200px;
+      background: white;
+      border: 3px solid;
+      border-radius: 16px;
+      padding: 20px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+
+    .bucket:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 20px -5px rgba(0,0,0,0.15);
+    }
+
+    .bucket:active {
+      transform: translateY(0);
+    }
+
+    .bucket-proper { border-color: #3b82f6; color: #1d4ed8; background-color: #eff6ff; }
+    .bucket-improper { border-color: #ef4444; color: #b91c1c; background-color: #fef2f2; }
+    .bucket-mixed { border-color: #10b981; color: #047857; background-color: #ecfdf5; }
+
+    .bucket-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .bucket-desc {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* 按鈕與訊息 */
+    .btn {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 28px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.2s;
+    }
+
+    .btn:hover { background-color: #1d4ed8; }
+
+    .feedback {
+      height: 30px;
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .correct { color: #16a34a; }
+    .wrong { color: #dc2626; }
+
+    /* 隱藏元素 */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <h1>分數王國的食物大冒險</h1>
+  <div class="subtitle">國小四年級數學：真分數、假分數、帶分數分類挑戰</div>
+
+  <div class="dashboard">
+    <div class="score">得分：<span id="score">0</span></div>
+    <div class="timer">剩餘時間：<span id="timer">60</span> 秒</div>
+  </div>
+
+  <div id="game-area">
+    <div class="card-container">
+      <div id="card" class="fraction-card">點擊下方按鈕開始遊戲</div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <div class="buckets-container">
+      <div class="bucket bucket-proper" onclick="checkAnswer('proper')">
+        <div class="bucket-title">真分數小豬</div>
+        <div class="bucket-desc">(分子 < 分母)</div>
+      </div>
+
+      <div class="bucket bucket-improper" onclick="checkAnswer('improper')">
+        <div class="bucket-title">假分數大怪獸</div>
+        <div class="bucket-desc">(分子 ≥ 分母)</div>
+      </div>
+
+      <div class="bucket bucket-mixed" onclick="checkAnswer('mixed')">
+        <div class="bucket-title">帶分數巨人</div>
+        <div class="bucket-desc">(整數 + 真分數)</div>
+      </div>
+    </div>
+  </div>
+
+  <button id="start-btn" class="btn" onclick="startGame()">開始遊戲</button>
+
+  <script>
+    // 題庫資料
+    const questions = [
+      { whole: 0, num: 1, den: 3, type: 'proper' },
+      { whole: 0, num: 3, den: 5, type: 'proper' },
+      { whole: 0, num: 7, den: 8, type: 'proper' },
+      { whole: 0, num: 5, den: 12, type: 'proper' },
+      { whole: 0, num: 4, den: 3, type: 'improper' },
+      { whole: 0, num: 5, den: 5, type: 'improper' }, // 特別安排分子=分母
+      { whole: 0, num: 9, den: 2, type: 'improper' },
+      { whole: 0, num: 8, den: 8, type: 'improper' }, // 觀念陷阱題
+      { whole: 1, num: 1, den: 2, type: 'mixed' },
+      { whole: 2, num: 3, den: 4, type: 'mixed' },
+      { whole: 3, num: 1, den: 5, type: 'mixed' },
+      { whole: 4, num: 2, den: 9, type: 'mixed' }
+    ];
+
+    let currentQuestion = null;
+    let score = 0;
+    let timeLeft = 60;
+    let timerId = null;
+    let isPlaying = false;
+
+    function startGame() {
+      score = 0;
+      timeLeft = 60;
+      isPlaying = true;
+      document.getElementById('score').innerText = score;
+      document.getElementById('timer').innerText = timeLeft;
+      document.getElementById('start-btn').classList.add('hidden');
+      document.getElementById('feedback').innerText = '';
+
+      // 開始倒數計時
+      timerId = setInterval(() => {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+
+      nextQuestion();
+    }
+
+    function nextQuestion() {
+      if (!isPlaying) return;
+      
+      // 隨機抽題
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      currentQuestion = questions[randomIndex];
+
+      // 渲染分數 HTML
+      const cardEl = document.getElementById('card');
+      cardEl.innerHTML = renderFractionHTML(currentQuestion);
+    }
+
+    function renderFractionHTML(q) {
+      let html = '';
+      if (q.whole > 0) {
+        html += `<span class="whole-number">${q.whole}</span>`;
+      }
+      html += `
+        <div class="fraction">
+          <span class="numerator">${q.num}</span>
+          <span class="denominator">${q.den}</span>
+        </div>
+      `;
+      return html;
+    }
+
+    function checkAnswer(selectedType) {
+      if (!isPlaying || !currentQuestion) return;
+
+      const feedbackEl = document.getElementById('feedback');
+
+      if (selectedType === currentQuestion.type) {
+        score += 10;
+        document.getElementById('score').innerText = score;
+        feedbackEl.className = 'feedback correct';
+        feedbackEl.innerText = '⭕ 答對了！太棒了！';
+      } else {
+        feedbackEl.className = 'feedback wrong';
+        feedbackEl.innerText = '❌ 答錯囉！再想想看！';
+      }
+
+      nextQuestion();
+    }
+
+    function endGame() {
+      clearInterval(timerId);
+      isPlaying = false;
+      document.getElementById('card').innerText = '時間到！遊戲結束';
+      document.getElementById('feedback').className = 'feedback';
+      document.getElementById('feedback').innerText = `最終得分：${score} 分！`;
+      document.getElementById('start-btn').innerText = '再玩一次';
+      document.getElementById('start-btn').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
